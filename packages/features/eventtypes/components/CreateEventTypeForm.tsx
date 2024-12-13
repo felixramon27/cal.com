@@ -32,7 +32,7 @@ export default function CreateEventTypeForm({
   const isPlatform = useIsPlatform();
   const { t } = useLocale();
   const [firstRender, setFirstRender] = useState(true);
-  const [durationUnit, setDurationUnit] = useState<"minutes" | "hours">("minutes");
+  const [durationUnit, setDurationUnit] = useState<"minutes" | "hours" | "days">("minutes");
 
   // setValue and watch are for time format handling
   const { register, setValue, watch } = form;
@@ -40,13 +40,13 @@ export default function CreateEventTypeForm({
 
   const handleDurationChange = (value: number) => {
     if (durationUnit === "hours") {
-      setValue("length", value * 60);
+      setValue("length", value * 60); // Convert hours to minutes
+    } else if (durationUnit === "days") {
+      setValue("length", value * 1440); // Convert days to minutes
     } else {
-      setValue("length", Math.round(value));
+      setValue("length", Math.round(value)); // Minutes
     }
   };
-
-  const displayDuration = durationUnit === "hours" ? Math.round((duration / 60) * 100) / 100 : duration;
 
   return (
     <Form
@@ -136,16 +136,14 @@ export default function CreateEventTypeForm({
             <TextField
               type="number"
               required
-              min={durationUnit === "minutes" ? "10" : "0.17"}
-              step={durationUnit === "minutes" ? "1" : "0.08"}
-              placeholder={durationUnit === "minutes" ? "15" : "0.25"}
+              min="10"
+              placeholder="15"
               label={t("duration")}
               className="flex-grow pr-4"
               {...register("length", {
                 valueAsNumber: true,
                 onChange: (e) => handleDurationChange(parseFloat(e.target.value)),
               })}
-              value={displayDuration}
               //addOnSuffix={t("minutes")}
             />
             <Select
@@ -154,12 +152,15 @@ export default function CreateEventTypeForm({
               options={[
                 { value: "minutes", label: t("minutes") },
                 { value: "hours", label: t("hours") },
+                { value: "days", label: t("days") },
               ]}
               onChange={(option) => {
-                const newUnit = option?.value as "minutes" | "hours";
+                const newUnit = option?.value as "minutes" | "hours" | "days";
                 setDurationUnit(newUnit);
                 if (newUnit === "hours") {
                   setValue("length", Math.round((duration / 60) * 100) / 100);
+                } else if (newUnit === "days") {
+                  setValue("length", Math.round((duration / 1440) * 100) / 100);
                 } else {
                   setValue("length", Math.round(duration * 60));
                 }
